@@ -1,10 +1,15 @@
 import { useState } from 'react';
 import { Booking, BookingForm } from '../types';
-import { initialBookings } from '../data/mockData';
+import { getBookingsFromStorage, saveBookingsToStorage } from '../utils/localStorage';
 import { getNextId } from '../utils/helpers';
 
 export const useBookings = () => {
-  const [bookings, setBookings] = useState<Booking[]>(initialBookings);
+  const [bookings, setBookings] = useState<Booking[]>(() => getBookingsFromStorage());
+
+  const updateBookings = (newBookings: Booking[]) => {
+    setBookings(newBookings);
+    saveBookingsToStorage(newBookings);
+  };
 
   const handleBookingRequest = (bookingForm: BookingForm, userId: number) => {
     const newBooking: Booking = {
@@ -18,21 +23,25 @@ export const useBookings = () => {
       purpose: bookingForm.purpose
     };
     
-    setBookings([...bookings, newBooking]);
+    const newBookings = [...bookings, newBooking];
+    updateBookings(newBookings);
   };
 
   const handleBookingAction = (bookingId: number, action: 'approved' | 'rejected') => {
-    setBookings(bookings.map(b => 
+    const newBookings = bookings.map(b => 
       b.id === bookingId ? { ...b, status: action } : b
-    ));
+    );
+    updateBookings(newBookings);
   };
 
   const handleMarkReturned = (bookingId: number) => {
-    setBookings(bookings.filter(b => b.id !== bookingId));
+    const newBookings = bookings.filter(b => b.id !== bookingId);
+    updateBookings(newBookings);
   };
 
   const removeBookingsByComponent = (componentId: number) => {
-    setBookings(bookings.filter(b => b.componentId !== componentId));
+    const newBookings = bookings.filter(b => b.componentId !== componentId);
+    updateBookings(newBookings);
   };
 
   return {

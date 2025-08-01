@@ -1,12 +1,22 @@
 import { useState } from 'react';
 import { User, LoginForm, RegisterForm } from '../types';
-import { initialUsers } from '../data/mockData';
+import { getUsersFromStorage, saveUsersToStorage, initializeStorage } from '../utils/localStorage';
 import { getNextId } from '../utils/helpers';
 
 export const useAuth = () => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  // Initialize storage on first load
+  useState(() => {
+    initializeStorage();
+  });
+
+  const [users, setUsers] = useState<User[]>(() => getUsersFromStorage());
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showLogin, setShowLogin] = useState(true);
+
+  const updateUsers = (newUsers: User[]) => {
+    setUsers(newUsers);
+    saveUsersToStorage(newUsers);
+  };
 
   const handleLogin = (loginForm: LoginForm): boolean => {
     const user = users.find(u => u.rollNo === loginForm.rollNo && u.password === loginForm.password);
@@ -36,7 +46,8 @@ export const useAuth = () => {
       password: registerForm.password
     };
     
-    setUsers([...users, newUser]);
+    const newUsers = [...users, newUser];
+    updateUsers(newUsers);
     return true;
   };
 
